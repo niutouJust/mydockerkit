@@ -10,18 +10,33 @@
 
 ### USE
 
-<p>sudo docker compose -f docker-compose.yml --profile tools-app up -d</p>
-<p>sudo docker compose -f docker-compose.yml --profile tools-app down</p>
-<p>sudo docker compose -f docker-compose.yml --profile tools-db up -d</p>
-<p>sudo docker compose -f docker-compose.yml --profile tools-db down</p>
+<p>
+```
+sudo docker compose -f docker-compose.yml --profile tools-app up -d
+sudo docker compose -f docker-compose.yml --profile tools-app down
+sudo docker compose -f docker-compose.yml --profile tools-db up -d
+sudo docker compose -f docker-compose.yml --profile tools-db down
+```
+</p>
 
 ### You can 
-<p>alias dockertool='sudo docker compose -f docker-compose.yml --profile'</p>
+<p>
+```
+alias dockertool='sudo docker compose -f docker-compose.yml --profile'
+```</p>
 <p>write to </p>
-<p>~/.bashrc && source ~/.bashrc</p>
+<p>
+```
+~/.bashrc && source ~/.bashrc
+```
+</p>
 
 ### And then
-<p>dockertool tools-app up -d </p>
+<p>
+```bash
+dockertool tools-app up -d 
+```
+</p>
 
 <p>writeing</p>
 
