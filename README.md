@@ -15,4 +15,17 @@
 <p>sudo docker compose -f docker-compose.yml --profile tools-db up -d</p>
 <p>sudo docker compose -f docker-compose.yml --profile tools-db down</p>
 
+### You can 
+<p>alias dockertool='sudo docker compose -f docker-compose.yml --profile'</p>
+<p>write to </p>
+<p>~/.bashrc && source ~/.bashrc</p>
+
+### And then
+<p>dockertool tools-app up -d </p>
+
 <p>writeing</p>
+
+### TODO
+
+[ ] gitlab-ce
+[ ] registry
