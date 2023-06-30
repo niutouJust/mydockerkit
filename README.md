@@ -10,37 +10,36 @@
 
 ### USE
 
-<p>
-```
+
+```bash
 sudo docker compose -f docker-compose.yml --profile tools-app up -d
 sudo docker compose -f docker-compose.yml --profile tools-app down
 sudo docker compose -f docker-compose.yml --profile tools-db up -d
 sudo docker compose -f docker-compose.yml --profile tools-db down
 ```
-</p>
 
 ### You can 
-<p>
-```
+
+```bash
 alias dockertool='sudo docker compose -f docker-compose.yml --profile'
-```</p>
-<p>write to </p>
-<p>
 ```
+<p>write to </p>
+
+```bash
 ~/.bashrc && source ~/.bashrc
 ```
-</p>
+
 
 ### And then
-<p>
+
 ```bash
-dockertool tools-app up -d 
+ dockertool tools-app up -d 
 ```
-</p>
 
 <p>writeing</p>
 
 ### TODO
 
-[ ] gitlab-ce
-[ ] registry
+
+> - [ ] gitlab-ce
+> - [ ] registry
