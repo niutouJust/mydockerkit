@@ -4,11 +4,11 @@ services:
     build: ./docker/nginx
     hostname: tools-nginx
     networks: 
-        - tools
+        - app
     ports: 
         - "7001:80"
     restart: always
-    profiles: ['tools']
+    profiles: ['tools-app']
     deploy:
         mode: replicated
         resources:
@@ -31,33 +31,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 5s
     
-  tools-db:
-    image: "mysql:${MYSQL_VERSION}"
-    hostname: tools-db
-    networks: 
-        - tools
-    ports: 
-        - "3309:3306"
-    profiles: ['tools']
-    deploy:
-        resources:
-            limits:
-                cpus: "2.00"
-                memory: "2048M" 
-        replicas: 1
-    environment:
-        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-        # MYSQL_USER: root
-        # MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-        TZ: 'PRC'
-    restart: always
-    volumes: 
-        - tools-mysql:/var/lib/mysql:Z
-        - tools-mysql-conf:/etc/mysql/conf.d:Z
-    working_dir: ${WORK_ROOT}
-    # healthcheck:
-    #   test:  ["CMD", "mysql", "--user=root", "--password=$MYSQL_ROOT_PASSWORD", "-e", "'SHOW DATABASES;'"] 
-    #   interval: 10s
+  
       
   tools-phpmyadmin:
     image: "phpmyadmin:latest"
@@ -72,42 +46,71 @@ services:
         PMA_ARBITRARY: "1"
         TZ: 'PRC'
     networks:
-        - tools
+        - app
     ports:
         - "7081:80"
-    profiles: ['tools']
+    profiles: ['tools-app']
     restart: always
     working_dir: ${WORK_ROOT}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 10s
 
-  tools-composer:
-    image: "composer:${COMPOSER_VERSION}"
-    hostname: tools-composer
+  tools-portainer:
+    image: portainer/portainer-ce:${PORTAINER_VERSION}
+    hostname: tools-portainer
     networks:
-        - tools
-    profiles: ['tools']
+        - app
+    profiles: ['tools-app']
+    ports:
+        - 6088:8000
+        - 6443:9443
     restart: always
-    command: '/bin/sh -c "while :; do sleep 10; done"'
-    volumes: 
-        - ./:${WORK_ROOT}
-    working_dir: ${WORK_ROOT}
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - tools-portainer_data:/data
     deploy:
         resources:
             limits:
-                cpus: "1.00"
-                memory: "1024M" 
+                cpus: "2.00"
+                memory: "2048M" 
         replicas: 1
     environment:
         TZ: 'PRC'
+  tools-db:
+    image: "mysql:${MYSQL_VERSION}"
+    hostname: tools-db
+    networks: 
+        - db
+    ports: 
+        - "3309:3306"
+    profiles: ['tools-db']
+    deploy:
+        resources:
+            limits:
+                cpus: "2.00"
+                memory: "2048M" 
+        replicas: 1
+    environment:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        # MYSQL_USER: root
+        # MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        TZ: 'PRC'
+    restart: always
+    volumes: 
+        - tools-mysql:/var/lib/mysql
+        - tools-mysql-conf:/etc/mysql/conf.d
+    working_dir: ${WORK_ROOT}
+    # healthcheck:
+    #   test:  ["CMD", "mysql", "--user=root", "--password=$MYSQL_ROOT_PASSWORD", "-e", "'SHOW DATABASES;'"] 
+    #   interval: 10s
 
   tools-redis:
     image: "redis"
     hostname: tools-redis
     networks:
-        - tools
-    profiles: ['tools']
+        - db
+    profiles: ['tools-db']
     restart: always
     command: 'redis-server'
     volumes: 
@@ -125,34 +128,12 @@ services:
       test:  ["CMD", "redis-cli"] 
       interval: 10s
 
-  tools-portainer:
-    image: portainer/portainer-ce:${PORTAINER_VERSION}
-    hostname: tools-portainer
-    networks:
-        - tools
-    profiles: ['tools']
-    ports:
-        - 6088:8000
-        - 6443:9443
-    restart: always
-    volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-        - tools-portainer_data:/data
-    deploy:
-        resources:
-            limits:
-                cpus: "2.00"
-                memory: "2048M" 
-        replicas: 1
-    environment:
-        TZ: 'PRC'
-        
   tools-meilisearch:
     image: getmeili/meilisearch:${MEILISEARCH_VERSION}
     hostname: tools-meilisearch
     networks:
-        - tools
-    profiles: ['tools']
+        - db
+    profiles: ['tools-db']
     restart: always
     ports: 
         - 7701:7700
@@ -173,7 +154,8 @@ services:
       interval: 10s
       
 networks: 
-    tools:
+    app:
+    db:
 volumes:
     tools-mysql:
     tools-mysql-conf:
