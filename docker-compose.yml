@@ -1,0 +1,183 @@
+version: "3.3"
+services:
+  tools-nginx:
+    build: ./docker/nginx
+    hostname: tools-nginx
+    networks: 
+        - tools
+    ports: 
+        - "7001:80"
+    restart: always
+    profiles: ['tools']
+    deploy:
+        mode: replicated
+        resources:
+            limits:
+                cpus: "1.00"
+                memory: "1024M" 
+        replicas: 1
+        # placement:
+        #     constraints:
+        #         - node.labels.type == tools-nginx
+        restart_policy: 
+            condition: on-failure
+    environment:
+        - NGINX_HOST=localhost
+        - NGINX_PORT=80
+    volumes: 
+        - ./:${WORK_ROOT}:Z
+    working_dir: ${WORK_ROOT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 5s
+    
+  tools-db:
+    image: "mysql:${MYSQL_VERSION}"
+    hostname: tools-db
+    networks: 
+        - tools
+    ports: 
+        - "3309:3306"
+    profiles: ['tools']
+    deploy:
+        resources:
+            limits:
+                cpus: "2.00"
+                memory: "2048M" 
+        replicas: 1
+    environment:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        # MYSQL_USER: root
+        # MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        TZ: 'PRC'
+    restart: always
+    volumes: 
+        - tools-mysql:/var/lib/mysql:Z
+        - tools-mysql-conf:/etc/mysql/conf.d:Z
+    working_dir: ${WORK_ROOT}
+    # healthcheck:
+    #   test:  ["CMD", "mysql", "--user=root", "--password=$MYSQL_ROOT_PASSWORD", "-e", "'SHOW DATABASES;'"] 
+    #   interval: 10s
+      
+  tools-phpmyadmin:
+    image: "phpmyadmin:latest"
+    hostname: tools-phpmyadmin
+    deploy:
+        resources:
+            limits:
+                cpus: "1.00"
+                memory: "1024M" 
+        replicas: 1
+    environment:
+        PMA_ARBITRARY: "1"
+        TZ: 'PRC'
+    networks:
+        - tools
+    ports:
+        - "7081:80"
+    profiles: ['tools']
+    restart: always
+    working_dir: ${WORK_ROOT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 10s
+
+  tools-composer:
+    image: "composer:${COMPOSER_VERSION}"
+    hostname: tools-composer
+    networks:
+        - tools
+    profiles: ['tools']
+    restart: always
+    command: '/bin/sh -c "while :; do sleep 10; done"'
+    volumes: 
+        - ./:${WORK_ROOT}
+    working_dir: ${WORK_ROOT}
+    deploy:
+        resources:
+            limits:
+                cpus: "1.00"
+                memory: "1024M" 
+        replicas: 1
+    environment:
+        TZ: 'PRC'
+
+  tools-redis:
+    image: "redis"
+    hostname: tools-redis
+    networks:
+        - tools
+    profiles: ['tools']
+    restart: always
+    command: 'redis-server'
+    volumes: 
+        - tools-redis:/etc/redis
+    working_dir: ${WORK_ROOT} 
+    deploy:
+        resources:
+            limits:
+                cpus: "1.00"
+                memory: "1024M" 
+        replicas: 1
+    environment:
+        TZ: 'PRC'
+    healthcheck:
+      test:  ["CMD", "redis-cli"] 
+      interval: 10s
+
+  tools-portainer:
+    image: portainer/portainer-ce:${PORTAINER_VERSION}
+    hostname: tools-portainer
+    networks:
+        - tools
+    profiles: ['tools']
+    ports:
+        - 6088:8000
+        - 6443:9443
+    restart: always
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - tools-portainer_data:/data
+    deploy:
+        resources:
+            limits:
+                cpus: "2.00"
+                memory: "2048M" 
+        replicas: 1
+    environment:
+        TZ: 'PRC'
+        
+  tools-meilisearch:
+    image: getmeili/meilisearch:${MEILISEARCH_VERSION}
+    hostname: tools-meilisearch
+    networks:
+        - tools
+    profiles: ['tools']
+    restart: always
+    ports: 
+        - 7701:7700
+    deploy:
+        resources:
+            limits:
+                cpus: "2.00"
+                memory: "2048M" 
+        replicas: 1
+    environment:
+        MEILI_ENV: 'development'
+        MEILI_MASTER_KEY: '${MEILI_MASTER_KEY}'
+        TZ: 'PRC'
+    volumes:
+        - tools-meilisearch:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700"]
+      interval: 10s
+      
+networks: 
+    tools:
+volumes:
+    tools-mysql:
+    tools-mysql-conf:
+    tools-redis:
+    tools-portainer_data:
+    tools-meilisearch:
+    
