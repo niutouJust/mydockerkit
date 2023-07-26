@@ -46,7 +46,7 @@ services:
         PMA_ARBITRARY: "1"
         TZ: 'PRC'
     networks:
-        - app
+        - db
     ports:
         - "7081:80"
     profiles: ['tools-app']
